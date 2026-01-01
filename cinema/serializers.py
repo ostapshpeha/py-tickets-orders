@@ -1,7 +1,11 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order, Ticket
+from cinema.models import (
+    Genre, Actor, CinemaHall,
+    Movie, MovieSession, Order,
+    Ticket
+)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -90,13 +94,17 @@ class MovieSessionDetailSerializer(MovieSessionSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     movie_session = MovieSessionListSerializer(many=False)
+
     class Meta:
         model = Ticket
         fields = ("id", "row", "seat", "movie_session")
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
-    movie_session = serializers.PrimaryKeyRelatedField(queryset=MovieSession.objects.all(), write_only=True)
+    movie_session = serializers.PrimaryKeyRelatedField(
+        queryset=MovieSession.objects.all(), write_only=True
+    )
+
     class Meta:
         model = Ticket
         fields = ("row", "seat", "movie_session")
@@ -106,8 +114,8 @@ class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketCreateSerializer(many=True, allow_empty=False)
 
     class Meta:
-       model = Order
-       fields = ("id", "tickets", "created_at")
+        model = Order
+        fields = ("id", "tickets", "created_at")
 
     def create(self, validated_data):
         with transaction.atomic():
@@ -119,5 +127,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['tickets'] = TicketSerializer(instance.tickets.all(), many=True).data
+        representation["tickets"] = TicketSerializer(
+            instance.tickets.all(), many=True
+        ).data
         return representation
